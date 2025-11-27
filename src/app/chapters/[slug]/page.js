@@ -125,7 +125,7 @@ export default async function MangaChaptersPage({ params }) {
                         )}
                         <div>
                             <h1 className="text-2xl font-bold">{title}</h1>
-                            <h2 className="text-lg text-gray-600 text-gray-400">All Chapters</h2>
+                            <h2 className="text-lg text-muted-foreground">All Chapters</h2>
                         </div>
                     </div>
                 </div>
@@ -133,20 +133,20 @@ export default async function MangaChaptersPage({ params }) {
 
             {/* Chapters List */}
             <div className="container mx-auto px-4 py-8">
-                <div className="bg-gray-800 rounded-xl shadow-sm overflow-hidden borderborder-gray-700">
+                <div className="bg-card rounded-xl shadow-sm overflow-hidden border">
                     {/* Filters */}
-                    <div className="p-4 border-b border-gray-200 border-gray-700 flex flex-wrap justify-between items-center gap-4">
+                    <div className="p-4 border-b flex flex-wrap justify-between items-center gap-4">
                         <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-500 text-gray-400">Total chapters:</span>
+                            <span className="text-sm text-muted-foreground">Total chapters:</span>
                             <span className="font-medium">{chapters.length}</span>
                         </div>
-                        <div className="text-sm text-gray-500 text-gray-400">
+                        <div className="text-sm text-muted-foreground">
                             {Object.keys(chaptersByVolume).length} volumes
                         </div>
                     </div>
 
                     {/* Volumes and Chapters */}
-                    <div className="divide-y ddivide-gray-700">
+                    <div className="divide-y">
                         {sortedVolumes.length > 0 ? (
                             sortedVolumes.map((volume) => (
                                 <div key={volume} className="p-4">
@@ -160,7 +160,7 @@ export default async function MangaChaptersPage({ params }) {
                                                 <Link
                                                     key={chapter.id}
                                                     href={`/read/${sluggedtitle}/chapter/${chapter.number}`}
-                                                    className="bg-gray-700 hover:bg-gray-600 p-3 rounded-md transition-colors duration-200"
+                                                    className="bg-secondary hover:bg-secondary/80 p-3 rounded-md transition-colors duration-200"
                                                 >
                                                     <div className="flex justify-between items-center">
                                                         <div>
@@ -168,17 +168,17 @@ export default async function MangaChaptersPage({ params }) {
                                                                 Chapter {chapter.number}
                                                             </h4>
                                                             {chapter.title && (
-                                                                <p className="text-sm text-gray-300 truncate">
+                                                                <p className="text-sm text-muted-foreground truncate">
                                                                     {chapter.title}
                                                                 </p>
                                                             )}
                                                         </div>
-                                                        <div className="text-xs  text-gray-400">
+                                                        <div className="text-xs text-muted-foreground">
                                                             {chapter.language}
                                                         </div>
                                                     </div>
                                                     {chapter.publishedAt && (
-                                                        <p className="text-xs  text-gray-400 mt-1">
+                                                        <p className="text-xs text-muted-foreground mt-1">
                                                             {new Date(chapter.publishedAt).toLocaleDateString()}
                                                         </p>
                                                     )}
@@ -190,7 +190,7 @@ export default async function MangaChaptersPage({ params }) {
                             ))
                         ) : (
                             <div className="p-8 text-center">
-                                <p className="text-gray-500 text-gray-400">
+                                <p className="text-muted-foreground">
                                     No chapters available for this manga
                                 </p>
                             </div>
@@ -199,13 +199,13 @@ export default async function MangaChaptersPage({ params }) {
 
                     {/* Pagination */}
                     {chapters.length > 0 && (
-                        <div className="p-4 border-t border-gray-200 border-gray-700 flex justify-center">
+                        <div className="p-4 border-t flex justify-center">
                             <nav className="flex items-center gap-2">
-                                <button className="px-3 py-1 rounded-md border border-gray-200 border-gray-600 text-sm disabled:opacity-50">
+                                <button className="px-3 py-1 rounded-md border text-sm disabled:opacity-50">
                                     Previous
                                 </button>
                                 <span className="px-3 py-1 text-sm">Page 1</span>
-                                <button className="px-3 py-1 rounded-md border border-gray-200 border-gray-600 text-sm disabled:opacity-50">
+                                <button className="px-3 py-1 rounded-md border text-sm disabled:opacity-50">
                                     Next
                                 </button>
                             </nav>

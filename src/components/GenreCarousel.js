@@ -59,11 +59,11 @@ const GenreCarousel = ({ genre, data }) => {
       `}</style>
 
       <div className="flex items-center justify-between p-4">
-        <h2 className="text-3xl font-semibold text-white">{genre}</h2>
+        <h2 className="text-3xl font-semibold">{genre}</h2>
         <div className="flex space-x-2">
           <button
-            className={`p-2 bg-gray-800 text-white rounded-full shadow-lg transition-opacity duration-300 ${
-              !prevBtnEnabled ? "opacity-50" : "hover:bg-gray-700"
+            className={`p-2 bg-secondary text-secondary-foreground rounded-full shadow-lg transition-opacity duration-300 ${
+              !prevBtnEnabled ? "opacity-50" : "hover:bg-secondary/80"
             }`}
             onClick={scrollPrev}
             disabled={!prevBtnEnabled}
@@ -71,8 +71,8 @@ const GenreCarousel = ({ genre, data }) => {
             <ChevronLeft />
           </button>
           <button
-            className={`p-2 bg-gray-800 text-white rounded-full shadow-lg transition-opacity duration-300 ${
-              !nextBtnEnabled ? "opacity-50" : "hover:bg-gray-700"
+            className={`p-2 bg-secondary text-secondary-foreground rounded-full shadow-lg transition-opacity duration-300 ${
+              !nextBtnEnabled ? "opacity-50" : "hover:bg-secondary/80"
             }`}
             onClick={scrollNext}
             disabled={!nextBtnEnabled}
@@ -109,13 +109,13 @@ const GenreCarousel = ({ genre, data }) => {
                 height={250}
                 className="banner absolute top-0 left-0 w-full h-full object-cover opacity-0"
               />
-              <div className="info absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-black to-transparent text-white opacity-0">
+              <div className="info absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-background to-transparent text-foreground opacity-0">
                 <h3 className="text-lg font-bold">
                   {manga?.attributes?.titles?.en ||
                     manga?.attributes?.canonicalTitle}
                 </h3>
                 <p className="text-sm flex items-center gap-1">
-                  <Star className="fill-yellow-400 stroke-none" />
+                  <Star className="fill-accent stroke-none" />
                   {manga?.attributes?.averageRating || "N/A"}
                 </p>
               </div>
@@ -124,7 +124,7 @@ const GenreCarousel = ({ genre, data }) => {
 
           <Link
             href={`genre/${genre}`}
-            className="m-2 p-3 bg-gray-800 text-white rounded-full shadow-lg transition-opacity duration-300 "
+            className="m-2 p-3 bg-secondary text-secondary-foreground rounded-full shadow-lg transition-opacity duration-300 "
           >
             <ChevronRight />
           </Link>

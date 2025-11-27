@@ -20,16 +20,16 @@ const SearchPage = async ({ params }) => {
 
   if (!results.length) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-gray-200">
+      <div className="min-h-screen flex items-center justify-center">
         <p className="text-xl">No results found for "{name}".</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen text-gray-200">
+    <div className="min-h-screen">
       <div className="container mx-auto px-4 py-12">
-        <h1 className="text-4xl md:text-6xl font-bangers tracking-wide font-semibold text-gray-200 drop-shadow-[0_0_10px_#fff7]">
+        <h1 className="text-4xl md:text-6xl font-bangers tracking-wide font-semibold">
           Search Results for "{name}"
         </h1>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-8">

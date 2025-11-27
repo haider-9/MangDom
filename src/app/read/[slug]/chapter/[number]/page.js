@@ -17,22 +17,56 @@ import {
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // Component to display manga chapter images
-const ChapterContent = ({ chapterImages, dataSaver = false }) => {
+const ChapterContent = ({ chapterImages, dataSaver = false, readingDirection = "vertical" }) => {
   const [loadedImages, setLoadedImages] = useState([]);
 
   const handleImageLoad = (index) => {
     setLoadedImages((prev) => [...prev, index]);
   };
 
+  // Determine layout based on reading direction
+  const getContainerClass = () => {
+    switch (readingDirection) {
+      case "horizontal":
+        return "flex overflow-x-auto snap-x snap-mandatory scrollbar-thin";
+      case "rtl":
+        return "flex flex-row-reverse overflow-x-auto snap-x snap-mandatory scrollbar-thin";
+      default:
+        return "flex flex-col items-center";
+    }
+  };
+
+  const getImageClass = () => {
+    switch (readingDirection) {
+      case "horizontal":
+      case "rtl":
+        return "flex-shrink-0 snap-center h-screen w-auto";
+      default:
+        return "w-full h-auto";
+    }
+  };
+
   return (
     <div className="mb-8">
-      <div className="flex flex-col items-center">
+      <div className={getContainerClass()}>
         {chapterImages.map((image, index) => (
-          <div key={index} className="mb-4 w-full max-w-3xl relative">
+          <div
+            key={index}
+            className={`${
+              readingDirection === "vertical" ? "mb-4 w-full max-w-3xl" : ""
+            } relative`}
+          >
             {!loadedImages.includes(index) && (
-              <div className="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-800">
+              <div className="absolute inset-0 flex items-center justify-center bg-muted">
                 <div className="animate-pulse">
                   Loading image {index + 1}...
                 </div>
@@ -43,7 +77,7 @@ const ChapterContent = ({ chapterImages, dataSaver = false }) => {
               alt={`Page ${index + 1}`}
               width={dataSaver ? 800 : 1200}
               height={dataSaver ? 1200 : 1800}
-              className="w-full h-auto"
+              className={getImageClass()}
               priority={index < 3}
               onLoad={() => handleImageLoad(index)}
               unoptimized={true}
@@ -167,31 +201,72 @@ const ReaderSettings = ({
   setDataSaver,
   readingDirection,
   setReadingDirection,
+  allChapters,
+  currentChapter,
+  mangaSlug,
 }) => {
-  return (
-    <div className="flex justify-between items-center mb-6 p-4 bg-muted rounded-lg">
-      <div className="flex items-center space-x-4">
-        <div className="flex items-center space-x-2">
-          <Switch
-            id="data-saver"
-            checked={dataSaver}
-            onCheckedChange={setDataSaver}
-          />
-          <Label htmlFor="data-saver">Data Saver</Label>
-        </div>
+  const router = useRouter();
 
-        <div className="flex items-center space-x-2">
-          <Label htmlFor="reading-direction">Reading Direction</Label>
-          <select
-            id="reading-direction"
-            value={readingDirection}
-            onChange={(e) => setReadingDirection(e.target.value)}
-            className="bg-background border rounded-md px-3 py-1 text-sm"
-          >
-            <option value="vertical">Vertical</option>
-            <option value="horizontal">Horizontal</option>
-            <option value="rtl">Right to Left</option>
-          </select>
+  const handleChapterChange = (chapterNumber) => {
+    router.push(`/read/${mangaSlug}/chapter/${chapterNumber}`);
+  };
+
+  return (
+    <div className="sticky top-16 z-20 bg-background/95 backdrop-blur-sm border-b mb-6">
+      <div className="container mx-auto px-4 py-4">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          {/* Left side - Chapter selector */}
+          <div className="flex items-center gap-2">
+            <Label htmlFor="chapter-select" className="text-sm font-medium">
+              Chapter:
+            </Label>
+            <Select value={currentChapter} onValueChange={handleChapterChange}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select chapter" />
+              </SelectTrigger>
+              <SelectContent className="max-h-[300px]">
+                {allChapters.map((chapter) => (
+                  <SelectItem
+                    key={chapter.id}
+                    value={chapter.attributes.chapter}
+                  >
+                    Chapter {chapter.attributes.chapter}
+                    {chapter.attributes.title && ` - ${chapter.attributes.title}`}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Right side - Settings */}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Switch
+                id="data-saver"
+                checked={dataSaver}
+                onCheckedChange={setDataSaver}
+              />
+              <Label htmlFor="data-saver" className="text-sm">
+                Data Saver
+              </Label>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Label htmlFor="reading-direction" className="text-sm">
+                Direction:
+              </Label>
+              <Select value={readingDirection} onValueChange={setReadingDirection}>
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="vertical">Vertical</SelectItem>
+                  <SelectItem value="horizontal">Horizontal</SelectItem>
+                  <SelectItem value="rtl">Right to Left</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -468,24 +543,31 @@ export default function ChapterPage() {
   }
 
   return (
-    <div
-      className={`container mx-auto px-4 py-8 ${
-        readingDirection === "rtl" ? "rtl" : "ltr"
-      }`}
-      ref={contentRef}
-    >
+    <div className="min-h-screen" ref={contentRef}>
       <ReaderSettings
         dataSaver={dataSaver}
         setDataSaver={setDataSaver}
         readingDirection={readingDirection}
         setReadingDirection={setReadingDirection}
+        allChapters={allChapters}
+        currentChapter={chapterData.number}
+        mangaSlug={params.slug}
       />
 
-      <h1 className="text-2xl font-bold mb-6 text-center">
-        {mangaData?.title} - {chapterData.title}
-      </h1>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-center">
+          {mangaData?.title} - {chapterData.title}
+        </h1>
+        <p className="text-center text-sm text-muted-foreground mt-1">
+          Page 1 of {chapterImages.length}
+        </p>
+      </div>
 
-      <ChapterContent chapterImages={chapterImages} dataSaver={dataSaver} />
+      <ChapterContent
+        chapterImages={chapterImages}
+        dataSaver={dataSaver}
+        readingDirection={readingDirection}
+      />
 
       <ChapterNavigation
         prevChapter={chapterData.prevChapter}
@@ -497,11 +579,13 @@ export default function ChapterPage() {
       />
 
       {/* Reading progress */}
-      <div className="flex justify-center pointer-events-none">
-        <div className="bg-primary text-primary-foreground px-4 py-2 rounded-full text-sm">
-          {chapterImages.length > 0
-            ? `${chapterData.number} • ${chapterImages.length} Chapters`
-            : "Loading pages..."}
+      <div className="container mx-auto px-4">
+        <div className="flex justify-center">
+          <div className="bg-primary text-primary-foreground px-4 py-2 rounded-full text-sm">
+            {chapterImages.length > 0
+              ? `Chapter ${chapterData.number} • ${chapterImages.length} Pages`
+              : "Loading pages..."}
+          </div>
         </div>
       </div>
     </div>

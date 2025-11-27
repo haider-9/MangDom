@@ -123,11 +123,11 @@ export default async function MangaPage({ params }) {
   };
 
   const statusColors = {
-    current: "bg-green-500",
-    finished: "bg-blue-500",
-    tba: "bg-yellow-500",
-    unreleased: "bg-gray-500",
-    upcoming: "bg-purple-500",
+    current: "bg-accent",
+    finished: "bg-primary",
+    tba: "bg-secondary",
+    unreleased: "bg-muted",
+    upcoming: "bg-secondary",
   };
 
   const rating = attributes.averageRating
@@ -249,7 +249,7 @@ export default async function MangaPage({ params }) {
                         xmlns="http://www.w3.org/2000/svg"
                         className={`h-4 w-4 ${
                           i < Math.round(parseFloat(rating))
-                            ? "text-yellow-500"
+                            ? "text-accent"
                             : "text-muted-foreground"
                         }`}
                         viewBox="0 0 20 20"
@@ -264,9 +264,9 @@ export default async function MangaPage({ params }) {
 
               {attributes.status && (
                 <div
-                  className={`px-3 py-1 justify-center items-center rounded-full flex  text-white text-sm font-medium ${
+                  className={`px-3 py-1 justify-center items-center rounded-full flex text-primary-foreground text-sm font-medium ${
                     statusColors[attributes.status.toLowerCase()] ||
-                    "bg-gray-500"
+                    "bg-muted"
                   }`}
                 >
                   {attributes.status.replace(/_/g, " ")}
@@ -274,7 +274,7 @@ export default async function MangaPage({ params }) {
               )}
 
               {attributes.ageRating && (
-                <div className="px-3 py-1 flex items-center justify-center rounded-full bg-purple-500 text-white text-sm font-medium">
+                <div className="px-3 py-1 flex items-center justify-center rounded-full bg-secondary text-secondary-foreground text-sm font-medium">
                   {attributes.ageRating}
                   {attributes.ageRatingGuide
                     ? ` (${attributes.ageRatingGuide})`
@@ -286,7 +286,7 @@ export default async function MangaPage({ params }) {
             {/* Action Buttons */}
             <div className="flex flex-wrap gap-3 mb-8">
               <Link href={`/chapters/${attributes.slug}`}>
-                <button className="flex-1 md:flex-none bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 shadow-md hover:shadow-lg">
+                <button className="flex-1 md:flex-none bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-3 px-6 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 shadow-md hover:shadow-lg">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     className="h-5 w-5"
@@ -369,35 +369,43 @@ export default async function MangaPage({ params }) {
             {/* Characters */}
             <div className="bg-card rounded-xl shadow-sm p-6 mb-8 border border-border">
               <h3 className="text-xl font-semibold mb-4">Characters</h3>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                 {characters?.map((character) => (
-                  <a
+                  <Link
                     href={`/character/${character.id}`}
                     key={character.id}
-                    className="group relative bg-secondary/50 rounded-xl p-2 transition-all duration-300 hover:bg-secondary/80 hover:scale-105"
+                    className="group"
                   >
-                    <div className="relative w-full aspect-square rounded-lg overflow-hidden mb-2">
-                      {character.attributes?.image?.original ? (
-                        <Image
-                          src={character.attributes.image.original}
-                          alt={character.attributes.canonicalName}
-                          fill
-                          sizes="(max-width: 768px) 50vw, 25vw"
-                          className="object-cover group-hover:opacity-90 transition-opacity"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-secondary flex items-center justify-center">
-                          <span className="text-muted-foreground text-sm">
-                            No Image
-                          </span>
-                        </div>
-                      )}
-                    </div>
+                    <div className="relative rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
+                      {/* Character Image */}
+                      <div className="relative aspect-[3/4]">
+                        {character.attributes?.image?.original ? (
+                          <Image
+                            src={character.attributes.image.original}
+                            alt={character.attributes.canonicalName}
+                            fill
+                            sizes="(max-width: 768px) 50vw, 20vw"
+                            className="object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-secondary flex items-center justify-center">
+                            <span className="text-muted-foreground text-sm">
+                              No Image
+                            </span>
+                          </div>
+                        )}
+                        {/* Gradient Overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
+                      </div>
 
-                    <div className="font-medium text-sm truncate text-center group-hover:text-primary">
-                      {character.attributes.canonicalName}
+                      {/* Character Name */}
+                      <div className="absolute bottom-0 left-0 right-0 p-3">
+                        <div className="text-white font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors">
+                          {character.attributes.canonicalName}
+                        </div>
+                      </div>
                     </div>
-                  </a>
+                  </Link>
                 ))}
               </div>
             </div>

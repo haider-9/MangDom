@@ -58,7 +58,7 @@ const GenrePage = ({ params }) => {
   if (error) {
     return (
       <div className="container mx-auto px-4 py-8 text-center">
-        <h1 className="text-2xl font-bold text-red-500">Error: {error}</h1>
+        <h1 className="text-2xl font-bold text-destructive">Error: {error}</h1>
       </div>
     )
   }
@@ -80,13 +80,13 @@ const GenrePage = ({ params }) => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold mb-8 sm:mb-12 text-center text-purple-800 tracking-tight">
+      <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold mb-8 sm:mb-12 text-center tracking-tight">
         {formatGenreName(genreslug)} Manga
       </h1>
 
       {mangaData.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-xl text-gray-600">No manga found in this genre</p>
+          <p className="text-xl text-muted-foreground">No manga found in this genre</p>
         </div>
       ) : (
         <>
@@ -130,7 +130,7 @@ const GenrePage = ({ params }) => {
                             e.target.src = "/cover_placeholder.jpeg"
                           }}
                         />
-                        <h2 className="text-lg font-semibold mt-2 text-center text-white line-clamp-2">
+                        <h2 className="text-lg font-semibold mt-2 text-center text-foreground line-clamp-2">
                           {title}
                         </h2>
                       </Link>

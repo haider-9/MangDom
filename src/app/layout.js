@@ -1,8 +1,11 @@
-import { Inter } from "next/font/google";
+import { Roboto_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-const inter = Inter({ subsets: ["latin"] });
+
+const robot_mono = Roboto_Mono({
+  subsets: ["latin"]
+})
 
 export const metadata = {
   title: "Mangadom",
@@ -12,10 +15,9 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className={`${inter.className} bg-zinc-900 text-gray-200`}>
+      <body className={`${robot_mono.className} bg-background text-foreground`}>
         <Navbar />
         <div className="mt-16">
-
           {children}
         </div>
         <Footer />

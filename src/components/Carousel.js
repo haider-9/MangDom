@@ -53,15 +53,15 @@ const Carousel = () => {
                 alt={manga.attributes.canonicalTitle}
                 className="w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-r from-zinc-900/80 to-zinc-900/70 flex items-end">
-                <div className="p-6 max-w-3xl text-white w-full">
+              <div className="absolute inset-0 bg-gradient-to-r from-background/80 to-background/70 flex items-end">
+                <div className="p-6 max-w-3xl text-foreground w-full">
                   <h2 className="text-2xl md:text-4xl tracking-wide font-bold font-bangers space-y-3">
                     <Link href={`/manga/${manga?.attributes?.slug}`}>
                     {manga.attributes.canonicalTitle}
                     </Link>
                   </h2>
-                  <p className="mb-2 text-sm text-yellow-400 font-bold flex items-center gap-1">
-                    <Star className="fill-yellow-400 stroke-none" />
+                  <p className="mb-2 text-sm text-accent font-bold flex items-center gap-1">
+                    <Star className="fill-accent stroke-none" />
                     {manga.attributes.averageRating
                       ? `${(
                           parseFloat(manga.attributes.averageRating) / 10
@@ -78,12 +78,12 @@ const Carousel = () => {
         </div>
       </div>
       <button
-        className="absolute top-1/2 left-6 transform -translate-y-1/2 bg-white bg-opacity-50 hover:bg-opacity-75 text-black font-bold py-3 px-5 rounded-full text-2xl"
+        className="absolute top-1/2 left-6 transform -translate-y-1/2 bg-primary/50 hover:bg-primary/75 text-primary-foreground font-bold py-3 px-5 rounded-full text-2xl"
         onClick={scrollPrev}>
         ‹
       </button>
       <button
-        className="absolute top-1/2 right-6 transform -translate-y-1/2 bg-white bg-opacity-50 hover:bg-opacity-75 text-black font-bold py-3 px-5 rounded-full text-2xl"
+        className="absolute top-1/2 right-6 transform -translate-y-1/2 bg-primary/50 hover:bg-primary/75 text-primary-foreground font-bold py-3 px-5 rounded-full text-2xl"
         onClick={scrollNext}>
         ›
       </button>

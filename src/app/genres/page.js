@@ -109,7 +109,7 @@ export default function GenresPage() {
   if (genresData.data.length === 0) {
     return (
       <div className="flex justify-center items-center h-screen">
-        <div className="text-xl font-semibold text-gray-500">
+        <div className="text-xl font-semibold text-muted-foreground">
           No genres available.
         </div>
       </div>
@@ -122,14 +122,14 @@ export default function GenresPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
         {genresData.data.map((genre) => (
           <Link href={`/genre/${genre.attributes.slug}`} key={genre.id}>
-            <div className="relative bg-[#333] rounded-lg shadow-lg p-10 overflow-hidden group">
+            <div className="relative bg-secondary rounded-lg shadow-lg p-10 overflow-hidden group">
               <img
                 src={banners[genre.id] || 'placeholder_image_url'}
                 alt={genre.attributes.name}
                 className="absolute inset-0 w-full h-full object-cover opacity-60 transition-all duration-150 group-hover:scale-105"
               />
               <div className="relative z-10">
-                <h2 className="text-3xl font-semibold mb-3 text-white">
+                <h2 className="text-3xl font-semibold mb-3 text-foreground">
                   {genre.attributes.name}
                 </h2>
               </div>
@@ -141,7 +141,7 @@ export default function GenresPage() {
         <div className="mt-8 text-center">
           <button
             onClick={loadMoreGenres}
-            className="bg-[#333] hover:bg-[#444] text-white font-bold py-2 px-4 rounded transition-all duration-300 transform hover:-translate-y-1 hover:scale-105"
+            className="bg-secondary hover:bg-secondary/80 text-secondary-foreground font-bold py-2 px-4 rounded transition-all duration-300 transform hover:-translate-y-1 hover:scale-105"
           >
             Load More
           </button>
