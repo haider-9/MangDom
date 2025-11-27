@@ -24,6 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { findMangaBySlug, getMangaChapters, getChapterPages } from "@/lib/actions";
 
 // Component to display manga chapter images
 const ChapterContent = ({ chapterImages, dataSaver = false, readingDirection = "vertical" }) => {
@@ -287,80 +288,14 @@ export default function ChapterPage() {
   const contentRef = useRef(null);
   const [retryCount, setRetryCount] = useState(0);
 
-  async function findMangaBySlug(slug) {
-    try {
-      // First try direct lookup by slug
-      const response = await fetch(
-        `/api/manga/proxy?url=${encodeURIComponent(
-          "https://api.mangadex.org/manga?originalLanguage[]=ja&availableTranslatedLanguage[]=en&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&includes[]=cover_art&includes[]=author&order[relevance]=desc&limit=5&title=" +
-            slug
-        )}`,
-        {
-          headers: {
-            Accept: "application/json",
-          },
-          cache: "no-store",
-          next: { revalidate: 60 }, // Revalidate every minute
-        }
-      );
 
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      if (data.data && data.data.length > 0) {
-        const exactMatch = data.data.find(
-          (manga) =>
-            manga.attributes.title.en?.toLowerCase() ===
-              slug.replace(/-/g, " ").toLowerCase() ||
-            Object.values(manga.attributes.title).some(
-              (title) =>
-                title.toLowerCase() === slug.replace(/-/g, " ").toLowerCase()
-            )
-        );
-
-        if (exactMatch) return exactMatch;
-        return data.data[0];
-      }
-
-      // If not found, try searching with different parameters
-      const fallbackResponse = await fetch(
-        `https://api.mangadex.org/manga?originalLanguage[]=ja&availableTranslatedLanguage[]=en&includes[]=cover_art&includes[]=author&order[relevance]=desc&limit=5&title=${encodeURIComponent(
-          slug.replace(/-/g, " ")
-        )}`,
-        {
-          headers: {
-            Accept: "application/json",
-          },
-          cache: "no-store",
-        }
-      );
-
-      if (!fallbackResponse.ok) {
-        throw new Error(`API error: ${fallbackResponse.status}`);
-      }
-
-      const fallbackData = await fallbackResponse.json();
-
-      if (fallbackData.data && fallbackData.data.length > 0) {
-        return fallbackData.data[0];
-      }
-
-      throw new Error("Manga not found");
-    } catch (error) {
-      console.error("Error in findMangaBySlug:", error);
-      throw error;
-    }
-  }
 
   useEffect(() => {
     async function fetchChapterFromMangaDex() {
       try {
         setLoading(true);
 
-        // Step 1: Find the manga by slug
+        // Step 1: Find the manga by slug using server action
         const manga = await findMangaBySlug(params.slug);
         const mangaId = manga.id;
 
@@ -386,38 +321,8 @@ export default function ChapterPage() {
           coverUrl,
         });
 
-        // Step 2: Get chapters for this manga
-        const chaptersResponse = await fetch(
-          `https://api.mangadex.org/manga/${mangaId}/feed?translatedLanguage[]=en&order[volume]=asc&order[chapter]=asc&limit=100`,
-          {
-            headers: {
-              Accept: "application/json",
-            },
-            cache: "no-store",
-          }
-        );
-
-        if (!chaptersResponse.ok) {
-          throw new Error(
-            `Failed to fetch chapters: ${chaptersResponse.status}`
-          );
-        }
-
-        const chaptersData = await chaptersResponse.json();
-
-        if (!chaptersData.data || chaptersData.data.length === 0) {
-          throw new Error("No chapters found");
-        }
-
-        // Filter to get only chapters with data
-        const validChapters = chaptersData.data.filter(
-          (chapter) =>
-            chapter.attributes.pages > 0 && chapter.attributes.chapter
-        );
-
-        if (validChapters.length === 0) {
-          throw new Error("No readable chapters found");
-        }
+        // Step 2: Get chapters for this manga using server action
+        const validChapters = await getMangaChapters(mangaId);
 
         // Store all chapters for pagination
         setAllChapters(validChapters);
@@ -459,26 +364,8 @@ export default function ChapterPage() {
           pages: chapter.attributes.pages,
         });
 
-        // Step 3: Get chapter pages
-        const pagesResponse = await fetch(
-          `https://api.mangadex.org/at-home/server/${chapterId}`,
-          {
-            headers: {
-              Accept: "application/json",
-            },
-            cache: "no-store",
-          }
-        );
-
-        if (!pagesResponse.ok) {
-          throw new Error(`Failed to fetch pages: ${pagesResponse.status}`);
-        }
-
-        const pagesData = await pagesResponse.json();
-
-        if (!pagesData.chapter) {
-          throw new Error("Chapter pages not found");
-        }
+        // Step 3: Get chapter pages using server action
+        const pagesData = await getChapterPages(chapterId);
 
         // Create full image URLs
         const baseUrl = pagesData.baseUrl;
@@ -517,26 +404,158 @@ export default function ChapterPage() {
   }
 
   if (error || !chapterData) {
+    const isLicensedError = error?.includes("licensed") || error?.includes("not have readable chapters");
+    
     return (
       <div className="container mx-auto px-4 py-8 flex flex-col justify-center items-center min-h-screen">
-        <div className="text-xl text-destructive mb-4">
-          {error || "Chapter not found"}
-        </div>
-        <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-          <Button onClick={handleRetry}>Retry Loading</Button>
-          <Button asChild>
-            <Link href={`/manga/${params.slug}`}>Go to Manga Details</Link>
-          </Button>
-          <Button asChild variant="outline">
-            <Link href="/">Return to Home</Link>
-          </Button>
-        </div>
-        <div className="mt-8 p-4 bg-muted rounded-lg max-w-lg text-center">
-          <p className="text-sm text-muted-foreground">
-            We're having trouble connecting to MangaDex. This could be due to
-            network issues, API rate limiting, or the manga may not be
-            available. Please try again later.
-          </p>
+        <div className="max-w-2xl w-full">
+          {/* Error Icon */}
+          <div className="flex justify-center mb-6">
+            <div className="w-20 h-20 rounded-full bg-destructive/10 flex items-center justify-center">
+              <svg className="w-10 h-10 text-destructive" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+          </div>
+
+          {/* Error Title */}
+          <h1 className="text-3xl font-bold text-center mb-4">
+            {isLicensedError ? "Content Not Available" : "Chapter Not Found"}
+          </h1>
+
+          {/* Error Message */}
+          <div className="bg-card border rounded-xl p-6 mb-6">
+            <p className="text-center text-lg mb-4">
+              {error || "Chapter not found"}
+            </p>
+            
+            {isLicensedError && (
+              <>
+                <div className="bg-muted rounded-lg p-4 mt-4">
+                  <h3 className="font-semibold mb-2">Why is this happening?</h3>
+                  <ul className="text-sm text-muted-foreground space-y-2 list-disc list-inside">
+                    <li>This manga is officially licensed and not available for reading on MangaDex</li>
+                    <li>Publishers have requested removal of scanlations</li>
+                    <li>Chapters may be available through official sources</li>
+                  </ul>
+                </div>
+
+                <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 mt-4">
+                  <h3 className="font-semibold mb-3 flex items-center gap-2">
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    Read Officially
+                  </h3>
+                  <div className="space-y-2">
+                    <a 
+                      href="https://www.viz.com/shonenjump" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-between p-3 bg-background hover:bg-accent rounded-lg transition-colors group"
+                    >
+                      <div>
+                        <div className="font-medium">Viz Media / Shonen Jump</div>
+                        <div className="text-xs text-muted-foreground">Official English translations</div>
+                      </div>
+                      <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                      </svg>
+                    </a>
+                    
+                    <a 
+                      href="https://mangaplus.shueisha.co.jp/updates" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-between p-3 bg-background hover:bg-accent rounded-lg transition-colors group"
+                    >
+                      <div>
+                        <div className="font-medium">MANGA Plus by SHUEISHA</div>
+                        <div className="text-xs text-muted-foreground">Free official chapters</div>
+                      </div>
+                      <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                      </svg>
+                    </a>
+
+                    <a 
+                      href="https://www.crunchyroll.com/comics/manga" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-between p-3 bg-background hover:bg-accent rounded-lg transition-colors group"
+                    >
+                      <div>
+                        <div className="font-medium">Crunchyroll Manga</div>
+                        <div className="text-xs text-muted-foreground">Subscription service</div>
+                      </div>
+                      <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                      </svg>
+                    </a>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            {!isLicensedError && (
+              <Button onClick={handleRetry} size="lg">
+                <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Retry Loading
+              </Button>
+            )}
+            <Button asChild size="lg" variant={isLicensedError ? "default" : "secondary"}>
+              <Link href={`/manga/${params.slug}`}>
+                <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Back to Manga Details
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="lg">
+              <Link href="/">
+                <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+                Return to Home
+              </Link>
+            </Button>
+          </div>
+
+          {/* Additional Help */}
+          {isLicensedError ? (
+            <div className="mt-8 p-4 bg-accent/10 border border-accent/20 rounded-lg">
+              <h4 className="font-semibold mb-2 text-center">Try These Available Manga</h4>
+              <p className="text-sm text-muted-foreground text-center mb-3">
+                Many manga are available to read on MangaDex. Here are some popular ones:
+              </p>
+              <div className="flex flex-wrap gap-2 justify-center">
+                <Link href="/manga/komi-cant-communicate" className="px-3 py-1 bg-primary/20 hover:bg-primary/30 rounded-full text-sm transition-colors">
+                  Komi Can't Communicate
+                </Link>
+                <Link href="/manga/spy-x-family" className="px-3 py-1 bg-primary/20 hover:bg-primary/30 rounded-full text-sm transition-colors">
+                  Spy x Family
+                </Link>
+                <Link href="/manga/chainsaw-man" className="px-3 py-1 bg-primary/20 hover:bg-primary/30 rounded-full text-sm transition-colors">
+                  Chainsaw Man
+                </Link>
+                <Link href="/manga/jujutsu-kaisen" className="px-3 py-1 bg-primary/20 hover:bg-primary/30 rounded-full text-sm transition-colors">
+                  Jujutsu Kaisen
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <div className="mt-8 p-4 bg-muted/50 rounded-lg text-center">
+              <p className="text-sm text-muted-foreground">
+                Having trouble? This could be due to network issues, API rate limiting, 
+                or temporary unavailability. Try a different manga or check back later.
+              </p>
+            </div>
+          )}
         </div>
       </div>
     );
